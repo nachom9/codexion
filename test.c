@@ -1,5 +1,7 @@
 #include "codexion.h"
+
 int number = 0;
+
 void    *ft_print(pthread_mutex_t *mutex)
 {
     while (1)

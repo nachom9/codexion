@@ -24,7 +24,10 @@ typedef struct s_params
     int compiles_required;
     int dongle_cooldown;
     char    *scheduler;
+    t_coder *coders;
 }	t_params;
+
+typedef struct s_
 
 t_coder	*ft_lstnew(void *content, int id);
 
