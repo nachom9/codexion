@@ -13,11 +13,15 @@ typedef struct s_params t_params;
 typedef struct s_coder
 {
     int id;
+    pthread_t thread;
+    pthread_mutex_t mutex;
 }	t_coder;
 
 typedef struct s_dongle
 {
     int id;
+    int state;
+    pthread_mutex_t mutex;
 }	t_dongle;
 
 typedef struct s_coders
@@ -42,12 +46,13 @@ typedef struct s_params
     int compiles_required;
     int dongle_cooldown;
     char    *scheduler;
-    t_coder **coders;
-    t_dongle **dongles;
+    t_coders *coders;
+    t_dongles *dongles;
 }	t_params;
 
 
 t_coder	*create_coder(int id);
 t_dongle	*create_dongle(int id);
+void    *print_state(void *arg);
 
 #endif
