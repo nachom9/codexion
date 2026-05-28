@@ -8,11 +8,29 @@
 # include <string.h>
 # include <sys/time.h>
 
+typedef struct s_params t_params;
+
 typedef struct s_coder
 {
     int id;
-    t_params *params;
 }	t_coder;
+
+typedef struct s_dongle
+{
+    int id;
+}	t_dongle;
+
+typedef struct s_coders
+{
+    t_coder **coders;
+    t_params *params;
+}	t_coders;
+
+typedef struct s_dongles
+{
+    t_dongle **dongles;
+    t_params *params;
+}	t_dongles;
 
 typedef struct s_params
 {
@@ -24,11 +42,12 @@ typedef struct s_params
     int compiles_required;
     int dongle_cooldown;
     char    *scheduler;
-    t_coder *coders;
+    t_coder **coders;
+    t_dongle **dongles;
 }	t_params;
 
-typedef struct s_
 
-t_coder	*ft_lstnew(void *content, int id);
+t_coder	*create_coder(int id);
+t_dongle	*create_dongle(int id);
 
 #endif
