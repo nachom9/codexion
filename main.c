@@ -1,23 +1,75 @@
 #include "codexion.h"
 
-t_dongles *set_dongles(int nb_of_coders)
+int compile(t_coder *coder)
 {
-    int i;
-    t_dongles    *all_dongles;
+    usleep(coder->params->time_to_compile * 1000);
+    printf("%ld %d is compiling\n", get_time() - coder->params->start_time, coder->id);
+    usleep(coder->params->time_to_debug * 1000);
+    printf("%ld %d is debugging\n", get_time() - coder->params->start_time, coder->id);
+    usleep(coder->params->time_to_refactor * 1000);
+    printf("%ld %d is refactoring\n", get_time() - coder->params->start_time, coder->id);
+    coder->compiles -= 1;
+    coder->last_compile = get_time() - coder->params->start_time;
+    return (0);
+}
+int    take_dongles(t_coder *coder)
+{
+    int left;
+    int right;
 
-    i = 1;
-    all_dongles = malloc(sizeof(t_dongles));
-    if (!all_dongles)
-        return (NULL);
-    all_dongles->dongles = malloc(sizeof(t_dongle *) * nb_of_coders);
-    if (!all_dongles->dongles)
-        return (NULL);
-    while (i <= nb_of_coders)
+    right = coder->id - 1;
+    left = coder->id % coder->params->number_of_coders;
+    if (coder->id % 2 == 0)
     {
-        all_dongles->dongles[i] = create_dongle(i);
-        i++;
+        pthread_mutex_lock(&coder->params->dongles->dongles[right]->mutex);
+        pthread_mutex_lock(&coder->params->dongles->dongles[left]->mutex);
     }
-    return (all_dongles);
+    else
+    {
+        pthread_mutex_lock(&coder->params->dongles->dongles[left]->mutex);
+        pthread_mutex_lock(&coder->params->dongles->dongles[right]->mutex);
+    }
+
+    printf("Coder %d took dongles %d and %d.\n", coder->id,
+        coder->params->dongles->dongles[left]->id,
+        coder->params->dongles->dongles[right]->id);
+    compile(coder);
+    pthread_mutex_unlock(&coder->params->dongles->dongles[left]->mutex);
+    pthread_mutex_unlock(&coder->params->dongles->dongles[right]->mutex);
+    return (0);
+}
+
+void    *coder_killer(void *arg)
+{
+    int alive;
+    int i;
+    t_params   *params;
+    t_coder *coder;
+
+    params = (t_params *)arg;
+    alive = 1;
+    i = 0;
+
+    while(alive)
+    {
+        alive = 0;
+        while (params->coders->coders[i])
+        {
+            coder = params->coders->coders[i];
+            printf("%d\n", coder->id);
+            if (coder->state == 0)
+                alive = 1;
+            if (coder->last_compile > params->time_to_burnout + get_time() - params->start_time)
+            {
+                coder->state = 1;
+                printf("%ld %d burned out\n", get_time() - params->start_time, coder->id);
+                pthread_join(coder->thread, NULL);
+            }
+            i++;
+        }
+        usleep(500);
+    }
+    return (NULL);
 }
 
 void    *print_state(void *arg)
@@ -25,83 +77,57 @@ void    *print_state(void *arg)
     t_coder *coder;
 
     coder = (t_coder *)arg;
-    while(1)
+    while(coder->compiles > 0 && coder->state == 0)
     {
-        pthread_mutex_lock(&coder->mutex);
-        printf("%d\n", coder->id);
-        pthread_mutex_unlock(&coder->mutex);
+        take_dongles(coder);
+        usleep(coder->params->dongle_cooldown * 1000);
     }
     return (NULL);
 }
 
-t_coders *set_coders(t_params *params)
+long    get_time(void)
 {
-    int i;
-    t_coders    *all_coders;
-    t_coder *coder;
-    
-    i = 0;
-    all_coders = malloc(sizeof(t_coders));
-    if (!all_coders)
-        return (NULL);
-    all_coders->coders = malloc(sizeof(t_coder *) * params->number_of_coders);
-    if (!all_coders->coders)
-        return (NULL);
+    struct timeval  tv;
 
-    if (!all_coders)
-        return (NULL);
-    while (i < params->number_of_coders)
-    {
-        coder = create_coder(i + 1);
-        if (!coder)
-            return (NULL);
-        pthread_create(&coder->thread, NULL, print_state, coder);
-        all_coders->coders[i] = coder;
-        i++;
-    }
-    return (all_coders);
-}
-
-t_params    *parse_params(char **args)
-{
-    t_params	*node;
-
-	node = malloc(sizeof(t_params));
-	if (!node)
-		return (NULL);
-    node->number_of_coders = atoi(args[1]);
-    node->time_to_burnout = atoi(args[2]);
-    node->time_to_compile = atoi(args[3]);
-    node->time_to_debug = atoi(args[4]);
-    node->time_to_refactor = atoi(args[5]);
-    node->compiles_required = atoi(args[6]);
-    node->dongle_cooldown = atoi(args[7]);
-    node->scheduler = args[8];
-    return(node);
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000L + tv.tv_usec / 1000);
 }
 
 int main(int argc, char *argv[])
 {
     t_params    *params;
+    pthread_t death_thread;
     t_coders *coders;
     t_dongles   *dongles;
+    long    start_time;
     int i = 0;
+
+    start_time = get_time();
 
     if (argc != 9)
     {
-        printf("Arguments missing!");
+        printf("Arguments missing!\n");
         return (0);
     }
-    params = parse_params(argv);
-    coders = set_coders(params);
+    params = parse_params(argv, start_time);
     dongles = set_dongles(params->number_of_coders);
     params->dongles = dongles;
+    coders = set_coders(params);
     params->coders = coders;
+    pthread_create(&death_thread, NULL, coder_killer, params);
     while (i < params->number_of_coders)
     {
-        pthread_join(coders->coders[i]->thread, NULL);
+        if (coders->coders[i]->state == 1)
+            pthread_join(coders->coders[i]->thread, NULL);
+        free(coders->coders[i]);
+        free(dongles->dongles[i]);
         i++;
     }
+    free(coders->coders);
+    free(dongles->dongles);
+    free(coders);
+    free(dongles);
+    free(params);
 
     return (0);
 }

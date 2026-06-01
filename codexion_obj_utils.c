@@ -1,6 +1,6 @@
 #include "codexion.h"
 
-t_coder	*create_coder(int id)
+t_coder	*create_coder(int id, t_params *params)
 {
 	t_coder	*node;
 	int	state;
@@ -9,7 +9,9 @@ t_coder	*create_coder(int id)
 	if (!node)
 		return (NULL);
 	node->id = id;
-    pthread_mutex_init(&node->mutex, NULL);
+	node->compiles = params->compiles_required;
+	node->state = 0;
+	node->params = params;
 	return (node);
 }
 
@@ -22,5 +24,6 @@ t_dongle	*create_dongle(int id)
 		return (NULL);
 	node->state = 0;
 	node->id = id;
+    pthread_mutex_init(&node->mutex, NULL);
 	return (node);
 }
