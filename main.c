@@ -48,22 +48,27 @@ void    *coder_killer(void *arg)
 
     params = (t_params *)arg;
     alive = 1;
-    i = 0;
 
-    while(alive)
+    while(alive != 0)
     {
-        alive = 0;
-        while (params->coders->coders[i])
+        i = 0;
+        while (i < params->number_of_coders)
         {
             coder = params->coders->coders[i];
-            printf("%d\n", coder->id);
             if (coder->state == 0)
-                alive = 1;
-            if (coder->last_compile > params->time_to_burnout + get_time() - params->start_time)
+                continue;
+            if (coder->state == 1)
+                alive = 0;
+            if (get_time() - coder->last_compile > params->time_to_burnout + get_time() - params->start_time)
             {
-                coder->state = 1;
+                coder->state = 0;
+                while (i < params->number_of_coders)
+                {
+                    params->coders->coders[i]->state == 0;
+                    i++;
+                }
                 printf("%ld %d burned out\n", get_time() - params->start_time, coder->id);
-                pthread_join(coder->thread, NULL);
+                return (NULL);
             }
             i++;
         }
@@ -77,7 +82,7 @@ void    *print_state(void *arg)
     t_coder *coder;
 
     coder = (t_coder *)arg;
-    while(coder->compiles > 0 && coder->state == 0)
+    while(coder->compiles > 0 && coder->state == 1)
     {
         take_dongles(coder);
         usleep(coder->params->dongle_cooldown * 1000);
@@ -117,12 +122,12 @@ int main(int argc, char *argv[])
     pthread_create(&death_thread, NULL, coder_killer, params);
     while (i < params->number_of_coders)
     {
-        if (coders->coders[i]->state == 1)
-            pthread_join(coders->coders[i]->thread, NULL);
+        pthread_join(coders->coders[i]->thread, NULL);
         free(coders->coders[i]);
         free(dongles->dongles[i]);
         i++;
     }
+    pthread_join(death_thread, NULL);
     free(coders->coders);
     free(dongles->dongles);
     free(coders);

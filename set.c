@@ -56,7 +56,6 @@ t_coders *set_coders(t_params *params)
     all_coders->coders = malloc(sizeof(t_coder *) * params->number_of_coders);
     if (!all_coders->coders)
         return (NULL);
-
     if (!all_coders)
         return (NULL);
     while (i < params->number_of_coders)
