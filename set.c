@@ -16,6 +16,7 @@ t_params    *parse_params(char **args, long start_time)
     node->dongle_cooldown = atoi(args[7]);
     node->scheduler = args[8];
     node->start_time = start_time;
+    node->state = 1;
     return(node);
 }
 
@@ -63,7 +64,6 @@ t_coders *set_coders(t_params *params)
         coder = create_coder(i + 1, params);
         if (!coder)
             return (NULL);
-        pthread_create(&coder->thread, NULL, print_state, coder);
         all_coders->coders[i] = coder;
         i++;
     }

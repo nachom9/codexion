@@ -48,6 +48,7 @@ typedef struct s_params
     int time_to_refactor;
     int compiles_required;
     int dongle_cooldown;
+    int state;
     char    *scheduler;
     t_coders *coders;
     t_dongles *dongles;
