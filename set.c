@@ -8,7 +8,7 @@ t_params    *parse_params(char **args, long start_time)
 	if (!node)
 		return (NULL);
     node->number_of_coders = atoi(args[1]);
-    node->time_to_burnout = atoi(args[2]);
+    node->time_to_burnout = atol(args[2]);
     node->time_to_compile = atoi(args[3]);
     node->time_to_debug = atoi(args[4]);
     node->time_to_refactor = atoi(args[5]);

@@ -3,7 +3,6 @@
 t_coder	*create_coder(int id, t_params *params)
 {
 	t_coder	*node;
-	int	state;
 
 	node = malloc(sizeof(t_coder));
 	if (!node)
@@ -12,6 +11,7 @@ t_coder	*create_coder(int id, t_params *params)
 	node->compiles = params->compiles_required;
 	node->state = 1;
 	node->params = params;
+	node->last_compile = 0;
 	return (node);
 }
 
