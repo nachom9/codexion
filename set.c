@@ -17,6 +17,9 @@ t_params    *parse_params(char **args, long start_time)
     node->scheduler = args[8];
     node->start_time = start_time;
     node->state = 1;
+    node->coders = NULL;
+    node->dongles = NULL;
+    pthread_mutex_init(&node->mutex, NULL);
     return(node);
 }
 

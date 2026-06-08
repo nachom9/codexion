@@ -23,20 +23,17 @@ typedef struct s_coder
 typedef struct s_dongle
 {
     int id;
-    int state;
     pthread_mutex_t mutex;
 }	t_dongle;
 
 typedef struct s_coders
 {
     t_coder **coders;
-    t_params *params;
 }	t_coders;
 
 typedef struct s_dongles
 {
     t_dongle **dongles;
-    t_params *params;
 }	t_dongles;
 
 typedef struct s_params

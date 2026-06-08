@@ -22,7 +22,6 @@ t_dongle	*create_dongle(int id)
 	node = malloc(sizeof(t_dongle));
 	if (!node)
 		return (NULL);
-	node->state = 0;
 	node->id = id;
     pthread_mutex_init(&node->mutex, NULL);
 	return (node);

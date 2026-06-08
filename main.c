@@ -2,16 +2,28 @@
 
 int compile(t_coder *coder)
 {
-    if (coder->params->state == 0)
+    int state;
+
+    pthread_mutex_lock(&coder->params->mutex);
+    state = coder->params->state;
+    pthread_mutex_unlock(&coder->params->mutex);
+    if (state == 0)
         return (0);
     printf("%ld %d is compiling\n", get_time() - coder->params->start_time, coder->id);
     coder->last_compile = get_time() - coder->params->start_time;
     usleep(coder->params->time_to_compile * 1000);
-    if (coder->params->state == 0)
+    pthread_mutex_lock(&coder->params->mutex);
+    state = coder->params->state;
+    pthread_mutex_unlock(&coder->params->mutex);
+    if (state == 0)
         return (0);
+    pthread_mutex_unlock(&coder->params->mutex);
     printf("%ld %d is debugging\n", get_time() - coder->params->start_time, coder->id);
     usleep(coder->params->time_to_debug * 1000);
-    if (coder->params->state == 0)
+    pthread_mutex_lock(&coder->params->mutex);
+    state = coder->params->state;
+    pthread_mutex_unlock(&coder->params->mutex);
+    if (state == 0)
         return (0);
     printf("%ld %d is refactoring\n", get_time() - coder->params->start_time, coder->id);
     usleep(coder->params->time_to_refactor * 1000);
@@ -19,17 +31,11 @@ int compile(t_coder *coder)
     return (0);
 }
 
-/*
-void    lock_dongles(int i, int j, pthread_t *coder)
-{
-    pthread_mutex_lock(&coder->params->dongles->dongles[i]->mutex);
-    pthread_mutex_lock(&coder->params->dongles->dongles[j]->mutex);
-}*/
-
 int    take_dongles(t_coder *coder)
 {
     int left;
     int right;
+    int state;
 
     right = coder->id - 1;
     left = coder->id % coder->params->number_of_coders;
@@ -39,7 +45,10 @@ int    take_dongles(t_coder *coder)
     {
         //printf("coder %d locked dongle %d\n", coder->id, right);
         pthread_mutex_lock(&coder->params->dongles->dongles[right]->mutex);
-        if (coder->params->state == 0)
+        pthread_mutex_lock(&coder->params->mutex);
+        state = coder->params->state;
+        pthread_mutex_unlock(&coder->params->mutex);
+        if (state == 0)
         {
             pthread_mutex_unlock(&coder->params->dongles->dongles[right]->mutex);
             return (0);
@@ -51,14 +60,19 @@ int    take_dongles(t_coder *coder)
     {
         //printf("coder %d locked dongle %d\n", coder->id, left);
         pthread_mutex_lock(&coder->params->dongles->dongles[left]->mutex);
-        if (coder->params->state == 1)
+        pthread_mutex_lock(&coder->params->mutex);
+        state = coder->params->state;
+        pthread_mutex_unlock(&coder->params->mutex);
+        if (state == 1)
         {
             //printf("coder %d locked dongle %d\n", coder->id, right);
             pthread_mutex_lock(&coder->params->dongles->dongles[right]->mutex);
         }
-
     }
-    if (coder->params->state == 0)
+    pthread_mutex_lock(&coder->params->mutex);
+    state = coder->params->state;
+    pthread_mutex_unlock(&coder->params->mutex);
+    if (state == 0)
     {
         //printf("coder %d unlocked dongle %d\n", coder->id, left);
         pthread_mutex_unlock(&coder->params->dongles->dongles[left]->mutex);
@@ -69,8 +83,12 @@ int    take_dongles(t_coder *coder)
     printf("%ld %d has taken a dongle\n", get_time() - coder->params->start_time, coder->id);
     printf("%ld %d has taken a dongle\n", get_time() - coder->params->start_time, coder->id);
     compile(coder);
-    if (coder->params->state == 1)
+    pthread_mutex_lock(&coder->params->mutex);
+    state = coder->params->state;
+    pthread_mutex_unlock(&coder->params->mutex);
+    if (state == 1)
         usleep(coder->params->dongle_cooldown * 1000);
+    pthread_mutex_unlock(&coder->params->mutex);
     //printf("coder %d unlocked dongle %d\n", coder->id, left);
     pthread_mutex_unlock(&coder->params->dongles->dongles[left]->mutex);
     //printf("coder %d unlocked dongle %d\n", coder->id, right);
@@ -96,9 +114,11 @@ void    *coder_killer(void *arg)
             coder = params->coders->coders[i++];
             if (coder->compiles == 0)
                 j++;
-            if ((get_time() - params->start_time) - coder->last_compile > params->time_to_burnout)
+            if ((get_time() - params->start_time) - coder->last_compile > params->time_to_burnout && coder->compiles > 0)
             {
+                pthread_mutex_lock(&coder->params->mutex);
                 params->state = 0;
+                pthread_mutex_unlock(&coder->params->mutex);
                 printf("%ld %d burned out\n", get_time() - params->start_time, coder->id);
                 return (NULL);
             }
@@ -115,76 +135,31 @@ int ft_min(t_coder *coder)
     i = 0;
     while (i < coder->params->number_of_coders)
     {
-        if (coder->params->coders->coders[i]->last_compile < coder->last_compile)
-            return (0);
+        if (coder->params->coders->coders[i]->compiles > 0)
+        {
+            if (coder->params->coders->coders[i]->last_compile < coder->last_compile)
+                return (0);
+        }
         i++;
     }
     return (1);
 }
 
-int coder_prio(t_coder *coder)
-{
-    long right;
-    long left;
-
-    if (coder->id == 0)
-    {
-        right = coder->params->coders->coders[1]->last_compile;
-        left = coder->params->coders->coders[coder->params->number_of_coders]->last_compile;
-    }
-    else if (coder->id == coder->params->number_of_coders)
-    {
-        right = coder->params->coders->coders[0]->last_compile;
-        left = coder->params->coders->coders[coder->id - 2]->last_compile;
-    }
-    else
-    {
-        right = coder->params->coders->coders[coder->id]->last_compile;
-        left = coder->params->coders->coders[coder->id - 2]->last_compile;
-    }
-    //printf("%ld\n", coder->last_compile);
-    if (coder->last_compile <= right && coder->last_compile <= left)
-        return 1;
-    else
-        return 0;
-}
-
 void    *print_state(void *arg)
 {
     t_coder *coder;
+    int state;
 
+    state = 1;
     coder = (t_coder *)arg;
-    while(coder->compiles > 0 && coder->params->state == 1)
+    while(coder->compiles > 0 && state == 1)
     {
+        pthread_mutex_lock(&coder->params->mutex);
+        state = coder->params->state;
+        pthread_mutex_unlock(&coder->params->mutex);
         if (ft_min(coder))
             take_dongles(coder);
-        //printf("coder id: %d | coder->compiles: %d | state: %d\n", coder->id, coder->compiles, coder->params->state);
         usleep(500);
-    }
-    return (NULL);
-}
-
-void    *alg_fifo(void *arg)
-{
-    t_coder *coder;
-
-    coder = (t_coder *)arg;
-    while(coder->compiles > 0 && coder->params->state == 1)
-    {
-            take_dongles(coder);
-    }
-    return (NULL);
-}
-
-void    *alg_edf(void *arg)
-{
-    t_coder *coder;
-
-    coder = (t_coder *)arg;
-    while(coder->compiles > 0 && coder->params->state == 1)
-    {
-        if (ft_min(coder))
-            take_dongles(coder);
     }
     return (NULL);
 }
@@ -230,6 +205,7 @@ int main(int argc, char *argv[])
         while (i < params->number_of_coders)
         {
             pthread_join(coders->coders[i]->thread, NULL);
+            printf("coder %d has %d compiles left\n", i, coders->coders[i]->compiles);
             free(coders->coders[i]);
             free(dongles->dongles[i]);
             //printf("%d\n", i);
