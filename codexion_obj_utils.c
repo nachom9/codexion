@@ -9,7 +9,6 @@ t_coder	*create_coder(int id, t_params *params)
 		return (NULL);
 	node->id = id;
 	node->compiles = params->compiles_required;
-	node->state = 1;
 	node->params = params;
 	node->last_compile = 0;
 	return (node);

@@ -14,7 +14,6 @@ typedef struct s_coder
 {
     int id;
     int compiles;
-    int state;
     long last_compile;
     pthread_t thread;
     t_params *params;
@@ -53,6 +52,8 @@ typedef struct s_params
     long start_time;
 }	t_params;
 
+void    *ft_edf(void *arg);
+void    *ft_fifo(void *arg);
 t_params    *parse_params(char **args, long start_time);
 t_dongles *set_dongles(int nb_of_coders);
 t_coders *set_coders(t_params *params);

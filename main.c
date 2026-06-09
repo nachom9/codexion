@@ -17,7 +17,6 @@ int compile(t_coder *coder)
     pthread_mutex_unlock(&coder->params->mutex);
     if (state == 0)
         return (0);
-    pthread_mutex_unlock(&coder->params->mutex);
     printf("%ld %d is debugging\n", get_time() - coder->params->start_time, coder->id);
     usleep(coder->params->time_to_debug * 1000);
     pthread_mutex_lock(&coder->params->mutex);
@@ -43,7 +42,6 @@ int    take_dongles(t_coder *coder)
 
     if (coder->id % 2 == 0)
     {
-        //printf("coder %d locked dongle %d\n", coder->id, right);
         pthread_mutex_lock(&coder->params->dongles->dongles[right]->mutex);
         pthread_mutex_lock(&coder->params->mutex);
         state = coder->params->state;
@@ -53,30 +51,27 @@ int    take_dongles(t_coder *coder)
             pthread_mutex_unlock(&coder->params->dongles->dongles[right]->mutex);
             return (0);
         }
-        //printf("coder %d locked dongle %d\n", coder->id, left);
         pthread_mutex_lock(&coder->params->dongles->dongles[left]->mutex);
     }
     else
     {
-        //printf("coder %d locked dongle %d\n", coder->id, left);
         pthread_mutex_lock(&coder->params->dongles->dongles[left]->mutex);
         pthread_mutex_lock(&coder->params->mutex);
         state = coder->params->state;
         pthread_mutex_unlock(&coder->params->mutex);
-        if (state == 1)
+        if (state == 0)
         {
-            //printf("coder %d locked dongle %d\n", coder->id, right);
-            pthread_mutex_lock(&coder->params->dongles->dongles[right]->mutex);
+            pthread_mutex_unlock(&coder->params->dongles->dongles[left]->mutex);
+            return (0);
         }
+        pthread_mutex_lock(&coder->params->dongles->dongles[right]->mutex);
     }
     pthread_mutex_lock(&coder->params->mutex);
     state = coder->params->state;
     pthread_mutex_unlock(&coder->params->mutex);
     if (state == 0)
     {
-        //printf("coder %d unlocked dongle %d\n", coder->id, left);
         pthread_mutex_unlock(&coder->params->dongles->dongles[left]->mutex);
-        //printf("coder %d unlocked dongle %d\n", coder->id, right);
         pthread_mutex_unlock(&coder->params->dongles->dongles[right]->mutex);
         return (0);
     }
@@ -88,10 +83,7 @@ int    take_dongles(t_coder *coder)
     pthread_mutex_unlock(&coder->params->mutex);
     if (state == 1)
         usleep(coder->params->dongle_cooldown * 1000);
-    pthread_mutex_unlock(&coder->params->mutex);
-    //printf("coder %d unlocked dongle %d\n", coder->id, left);
     pthread_mutex_unlock(&coder->params->dongles->dongles[left]->mutex);
-    //printf("coder %d unlocked dongle %d\n", coder->id, right);
     pthread_mutex_unlock(&coder->params->dongles->dongles[right]->mutex);
     return (0);
 }
@@ -123,8 +115,9 @@ void    *coder_killer(void *arg)
                 return (NULL);
             }
         }
-        usleep(100);
+        usleep(5000);
     }
+    params->state == 0;
     return (NULL);
 }
 
@@ -145,7 +138,25 @@ int ft_min(t_coder *coder)
     return (1);
 }
 
-void    *print_state(void *arg)
+void    *ft_fifo(void *arg)
+{
+    t_coder *coder;
+    int state;
+
+    state = 1;
+    coder = (t_coder *)arg;
+    while(coder->compiles > 0 && state == 1)
+    {
+        pthread_mutex_lock(&coder->params->mutex);
+        state = coder->params->state;
+        pthread_mutex_unlock(&coder->params->mutex);
+        take_dongles(coder);
+        usleep(1000);
+    }
+    return (NULL);
+}
+
+void    *ft_edf(void *arg)
 {
     t_coder *coder;
     int state;
@@ -159,7 +170,7 @@ void    *print_state(void *arg)
         pthread_mutex_unlock(&coder->params->mutex);
         if (ft_min(coder))
             take_dongles(coder);
-        usleep(500);
+        usleep(1000);
     }
     return (NULL);
 }
@@ -170,6 +181,20 @@ long    get_time(void)
 
     gettimeofday(&tv, NULL);
     return (tv.tv_sec * 1000L + tv.tv_usec / 1000);
+}
+
+int check_scheduler(char *scheduler)
+{
+    char    *edf;
+    char    *fifo;
+
+    edf = "edf";
+    fifo = "fifo";
+    if (!strcmp(scheduler, fifo))
+        return (1);
+    if (!strcmp(scheduler, edf))
+        return (2);
+    return (0);
 }
 
 int main(int argc, char *argv[])
@@ -197,7 +222,10 @@ int main(int argc, char *argv[])
     {
         while (i < params->number_of_coders)
         {
-            pthread_create(&coders->coders[i]->thread, NULL, print_state, coders->coders[i]);
+            if (check_scheduler(params->scheduler) == 1)
+                pthread_create(&coders->coders[i]->thread, NULL, ft_fifo, coders->coders[i]);
+            if (check_scheduler(params->scheduler) == 2)
+                pthread_create(&coders->coders[i]->thread, NULL, ft_edf, coders->coders[i]);
             i++;
         }
         i = 0;
@@ -205,10 +233,8 @@ int main(int argc, char *argv[])
         while (i < params->number_of_coders)
         {
             pthread_join(coders->coders[i]->thread, NULL);
-            printf("coder %d has %d compiles left\n", i, coders->coders[i]->compiles);
             free(coders->coders[i]);
             free(dongles->dongles[i]);
-            //printf("%d\n", i);
             i++;
         }
     }
