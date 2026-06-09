@@ -11,6 +11,7 @@ t_coder	*create_coder(int id, t_params *params)
 	node->compiles = params->compiles_required;
 	node->params = params;
 	node->last_compile = 0;
+	pthread_mutex_init(&node->mutex, NULL);
 	return (node);
 }
 

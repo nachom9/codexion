@@ -1,6 +1,28 @@
 #include "codexion.h"
 
-t_params    *parse_params(char **args, long start_time)
+int check_scheduler(char *scheduler)
+{
+    char    *edf;
+    char    *fifo;
+
+    edf = "edf";
+    fifo = "fifo";
+    if (!strcmp(scheduler, fifo))
+        return (1);
+    if (!strcmp(scheduler, edf))
+        return (2);
+    return (0);
+}
+
+long    get_time(void)
+{
+    struct timeval  tv;
+
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000L + tv.tv_usec / 1000);
+}
+
+t_params    *parse_params(char **args)
 {
     t_params	*node;
 
@@ -15,7 +37,7 @@ t_params    *parse_params(char **args, long start_time)
     node->compiles_required = atoi(args[6]);
     node->dongle_cooldown = atoi(args[7]);
     node->scheduler = args[8];
-    node->start_time = start_time;
+    node->start_time = get_time();
     node->state = 1;
     node->coders = NULL;
     node->dongles = NULL;

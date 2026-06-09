@@ -15,6 +15,7 @@ typedef struct s_coder
     int id;
     int compiles;
     long last_compile;
+    pthread_mutex_t mutex;
     pthread_t thread;
     t_params *params;
 }	t_coder;
@@ -52,19 +53,21 @@ typedef struct s_params
     long start_time;
 }	t_params;
 
+int check_scheduler(char *scheduler);
+int check_state(t_params *params);
+void end_state(t_params *params);
 void    *ft_edf(void *arg);
 void    *ft_fifo(void *arg);
-t_params    *parse_params(char **args, long start_time);
+t_params    *parse_params(char **args);
 t_dongles *set_dongles(int nb_of_coders);
 t_coders *set_coders(t_params *params);
 t_coder	*create_coder(int id, t_params *params);
 t_dongle	*create_dongle(int id);
-void    *alg_fifo(void *arg);
-void    *alg_edf(void *arg);
 int    take_dongles(t_coder *coder);
 int compile(t_coder *coder);
 long    get_time(void);
-void    *coder_killer(void *arg);
+void    *set_death_algorithm(void *arg);
+void    *death_algorithm(t_params *params, t_coder *coder, int i, int j);
 int ft_min(t_coder *coder);
 
 
