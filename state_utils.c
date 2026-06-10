@@ -1,18 +1,18 @@
 #include "codexion.h"
 
-int check_state(t_params *params)
+int	check_state(t_params *params)
 {
-    int state;
+	int	state;
 
-    pthread_mutex_lock(&params->mutex);
-    state = params->state;
-    pthread_mutex_unlock(&params->mutex);
-    return (state);
+	pthread_mutex_lock(&params->mutex);
+	state = params->state;
+	pthread_mutex_unlock(&params->mutex);
+	return (state);
 }
 
-void    end_state(t_params *params)
+void	end_state(t_params *params)
 {
-    pthread_mutex_lock(&params->mutex);
-    params->state = 0;
-    pthread_mutex_unlock(&params->mutex);
+	pthread_mutex_lock(&params->mutex);
+	params->state = 0;
+	pthread_mutex_unlock(&params->mutex);
 }
