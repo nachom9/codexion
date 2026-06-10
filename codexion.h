@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   codexion.h                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: imelero- <imelero-@student.42madrid.c      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/06/10 17:54:04 by imelero-          #+#    #+#             */
+/*   Updated: 2026/06/10 17:54:06 by imelero-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef CODEXION_H
 # define CODEXION_H
 
@@ -54,29 +66,36 @@ typedef struct s_params
 	pthread_t		death_thread;
 }	t_params;
 
-int			check_scheduler(char *scheduler);
-int			check_state(t_params *params);
-void		end_state(t_params *params);
-void		*ft_edf(void *arg);
-void		*ft_fifo(void *arg);
+int			check_params(char **args);
 t_params	*parse_params(char **args);
-t_dongles	*set_dongles(int nb_of_coders);
-t_coders	*set_coders(t_params *params);
-t_coder		*create_coder(int id, t_params *params);
-t_dongle	*create_dongle(int id);
-int			take_dongles(t_coder *coder);
-int			compile(t_coder *coder);
+int			print_error(int inv_arg);
 long		get_time(void);
+int			check_scheduler(char *scheduler);
+
+t_coder		*create_coder(int id, t_params *params);
+t_coders	*set_coders(t_params *params);
+t_dongle	*create_dongle(int id);
+t_dongles	*set_dongles(int nb_of_coders);
+void		set_threads(t_params *params, t_coders *coders);
+
 void		*set_death_algorithm(void *arg);
 void		*death_algorithm(t_params *params, t_coder *coder, int i, int j);
+
 int			ft_min(t_coder *coder);
-void		set_threads(t_params *params, t_coders *coders, t_dongles *dongles);
-void		free_all(t_params *params);
+void		*ft_edf(void *arg);
+void		*ft_fifo(void *arg);
+
+int			take_dongles(t_coder *coder);
 int			take_dongles_even(t_coder *coder, int right, int left);
 int			take_dongles_odd(t_coder *coder, int right, int left);
-int			ft_strisdigit(char *str);
-int			check_params(char **args);
-int			print_error(int inv_arg);
+int			compile(t_coder *coder);
 void		unlock_dongles(t_coder *coder);
+
+int			check_state(t_params *params);
+void		end_state(t_params *params);
+
+int			ft_strisdigit(char *str);
+long		ft_atol(const char *str);
+void		free_all(t_params *params);
 
 #endif

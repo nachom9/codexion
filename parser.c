@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parser.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: imelero- <imelero-@student.42madrid.c      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/06/10 17:54:28 by imelero-          #+#    #+#             */
+/*   Updated: 2026/06/10 17:54:29 by imelero-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "codexion.h"
 
 int	check_scheduler(char *scheduler)
@@ -30,7 +42,7 @@ t_params	*parse_params(char **args)
 	if (!node)
 		return (NULL);
 	node->number_of_coders = atoi(args[1]);
-	node->time_to_burnout = atol(args[2]);
+	node->time_to_burnout = ft_atol(args[2]);
 	node->time_to_compile = atoi(args[3]);
 	node->time_to_debug = atoi(args[4]);
 	node->time_to_refactor = atoi(args[5]);

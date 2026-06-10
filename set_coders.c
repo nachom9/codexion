@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   set_coders.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: imelero- <imelero-@student.42madrid.c      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/06/10 17:54:35 by imelero-          #+#    #+#             */
+/*   Updated: 2026/06/10 17:54:37 by imelero-         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "codexion.h"
 
 t_coder	*create_coder(int id, t_params *params)
@@ -39,4 +51,31 @@ t_coders	*set_coders(t_params *params)
 		i++;
 	}
 	return (all_coders);
+}
+
+void	set_threads(t_params *params, t_coders *coders)
+{
+	int	i;
+	int	scheduler;
+
+	scheduler = check_scheduler(params->scheduler);
+	i = 0;
+	if (params->number_of_coders == 1)
+	{
+		free_all(params);
+		return ;
+	}
+	pthread_create(&params->death_thread, NULL, set_death_algorithm, params);
+	while (i < params->number_of_coders)
+	{
+		if (scheduler == 1)
+			pthread_create(&coders->coders[i]->thread,
+				NULL, ft_fifo, coders->coders[i]);
+		if (scheduler == 2)
+			pthread_create(&coders->coders[i]->thread,
+				NULL, ft_edf, coders->coders[i]);
+		i++;
+	}
+	pthread_join(params->death_thread, NULL);
+	free_all(params);
 }
