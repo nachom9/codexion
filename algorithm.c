@@ -12,7 +12,7 @@
 
 #include "codexion.h"
 
-int	ft_min(t_coder *coder)
+static int	ft_min(t_coder *coder)
 {
 	int		i;
 	long	last_compile;

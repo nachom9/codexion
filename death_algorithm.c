@@ -12,7 +12,7 @@
 
 #include "codexion.h"
 
-void	*death_algorithm(t_params *params, t_coder *coder, int i, int j)
+static void	*death_algorithm(t_params *params, t_coder *coder, int i, int j)
 {
 	while (j < params->number_of_coders)
 	{

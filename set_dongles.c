@@ -12,7 +12,7 @@
 
 #include "codexion.h"
 
-t_dongle	*create_dongle(int id)
+static t_dongle	*create_dongle(int id)
 {
 	t_dongle	*node;
 

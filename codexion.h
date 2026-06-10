@@ -73,24 +73,18 @@ int			print_error(int inv_arg);
 long		get_time(void);
 int			check_scheduler(char *scheduler);
 
-t_coder		*create_coder(int id, t_params *params);
 t_coders	*set_coders(t_params *params);
-t_dongle	*create_dongle(int id);
 t_dongles	*set_dongles(int nb_of_coders);
 void		set_threads(t_params *params, t_coders *coders);
 
 void		*set_death_algorithm(void *arg);
-void		*death_algorithm(t_params *params, t_coder *coder, int i, int j);
 
-int			ft_min(t_coder *coder);
 void		*ft_edf(void *arg);
 void		*ft_fifo(void *arg);
 
 int			take_dongles(t_coder *coder);
-int			take_dongles_even(t_coder *coder, int right, int left);
-int			take_dongles_odd(t_coder *coder, int right, int left);
 int			compile(t_coder *coder);
-void		unlock_dongles(t_coder *coder);
+void		unlock_dongles(t_coder	*coder);
 
 int			check_state(t_params *params);
 void		end_state(t_params *params);

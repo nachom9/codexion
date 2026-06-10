@@ -12,7 +12,7 @@
 
 #include "codexion.h"
 
-t_coder	*create_coder(int id, t_params *params)
+static t_coder	*create_coder(int id, t_params *params)
 {
 	t_coder	*node;
 
