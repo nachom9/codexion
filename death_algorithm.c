@@ -27,18 +27,18 @@ void	*death_algorithm(t_params *params, t_coder *coder, int i, int j)
 			if (((get_time() - params->start_time) - coder->last_compile
 					> params->time_to_burnout && coder->compiles > 0))
 			{
+				pthread_mutex_lock(&coder->params->print_mtx);
 				pthread_mutex_unlock(&coder->mutex);
 				end_state(params);
 				printf("%ld %d burned out\n",
 					get_time() - params->start_time, coder->id);
-				return (NULL);
+				return (pthread_mutex_unlock(&coder->params->print_mtx), NULL);
 			}
 			pthread_mutex_unlock(&coder->mutex);
 		}
 		usleep(100);
 	}
-	end_state(params);
-	return (NULL);
+	return (end_state(params), NULL);
 }
 
 void	*set_death_algorithm(void *arg)
@@ -48,6 +48,7 @@ void	*set_death_algorithm(void *arg)
 	t_params	*params;
 	t_coder		*coder;
 
+	coder = NULL;
 	j = 0;
 	i = 0;
 	params = (t_params *)arg;

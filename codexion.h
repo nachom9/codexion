@@ -60,6 +60,7 @@ typedef struct s_params
 	int				state;
 	char			*scheduler;
 	pthread_mutex_t	mutex;
+	pthread_mutex_t	print_mtx;
 	t_coders		*coders;
 	t_dongles		*dongles;
 	long			start_time;

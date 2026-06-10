@@ -25,21 +25,28 @@ void	unlock_dongles(t_coder	*coder)
 
 int	compile(t_coder *coder)
 {
+	pthread_mutex_lock(&coder->params->print_mtx);
 	if (check_state(coder->params) == 0)
-		return (0);
+		return (pthread_mutex_unlock(&coder->params->print_mtx), 0);
 	printf("%ld %d is compiling\n",
 		get_time() - coder->params->start_time, coder->id);
+	pthread_mutex_unlock(&coder->params->print_mtx);
 	coder->last_compile = get_time() - coder->params->start_time;
 	usleep(coder->params->time_to_compile * 1000);
+	unlock_dongles(coder);
+	pthread_mutex_lock(&coder->params->print_mtx);
 	if (check_state(coder->params) == 0)
-		return (0);
+		return (pthread_mutex_unlock(&coder->params->print_mtx), 0);
 	printf("%ld %d is debugging\n",
 		get_time() - coder->params->start_time, coder->id);
+	pthread_mutex_unlock(&coder->params->print_mtx);
 	usleep(coder->params->time_to_debug * 1000);
+	pthread_mutex_lock(&coder->params->print_mtx);
 	if (check_state(coder->params) == 0)
-		return (0);
+		return (pthread_mutex_unlock(&coder->params->print_mtx), 0);
 	printf("%ld %d is refactoring\n",
 		get_time() - coder->params->start_time, coder->id);
+	pthread_mutex_unlock(&coder->params->print_mtx);
 	usleep(coder->params->time_to_refactor * 1000);
 	coder->compiles -= 1;
 	return (0);
@@ -54,10 +61,19 @@ int	take_dongles_even(t_coder *coder, int right, int left)
 		return (0);
 	}
 	pthread_mutex_lock(&coder->params->dongles->dongles[left]->mutex);
+	pthread_mutex_lock(&coder->params->print_mtx);
+	if (check_state(coder->params) == 0)
+	{
+		pthread_mutex_unlock(&coder->params->dongles->dongles[left]->mutex);
+		pthread_mutex_unlock(&coder->params->dongles->dongles[right]->mutex);
+		pthread_mutex_unlock(&coder->params->print_mtx);
+		return (0);
+	}
 	printf("%ld %d has taken a dongle\n",
 		get_time() - coder->params->start_time, coder->id);
 	printf("%ld %d has taken a dongle\n",
 		get_time() - coder->params->start_time, coder->id);
+	pthread_mutex_unlock(&coder->params->print_mtx);
 	return (1);
 }
 
@@ -70,10 +86,19 @@ int	take_dongles_odd(t_coder *coder, int right, int left)
 		return (0);
 	}
 	pthread_mutex_lock(&coder->params->dongles->dongles[right]->mutex);
+	pthread_mutex_lock(&coder->params->print_mtx);
+	if (check_state(coder->params) == 0)
+	{
+		pthread_mutex_unlock(&coder->params->dongles->dongles[left]->mutex);
+		pthread_mutex_unlock(&coder->params->dongles->dongles[right]->mutex);
+		pthread_mutex_unlock(&coder->params->print_mtx);
+		return (0);
+	}
 	printf("%ld %d has taken a dongle\n",
 		get_time() - coder->params->start_time, coder->id);
 	printf("%ld %d has taken a dongle\n",
 		get_time() - coder->params->start_time, coder->id);
+	pthread_mutex_unlock(&coder->params->print_mtx);
 	return (1);
 }
 
