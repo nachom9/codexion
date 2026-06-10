@@ -74,5 +74,9 @@ void		set_threads(t_params *params, t_coders *coders, t_dongles *dongles);
 void		free_all(t_params *params);
 int			take_dongles_even(t_coder *coder, int right, int left);
 int			take_dongles_odd(t_coder *coder, int right, int left);
+int			ft_strisdigit(char *str);
+int			check_params(char **args);
+int			print_error(int inv_arg);
+void		unlock_dongles(t_coder *coder);
 
 #endif

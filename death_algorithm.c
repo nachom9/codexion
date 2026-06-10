@@ -23,7 +23,7 @@ void	*death_algorithm(t_params *params, t_coder *coder, int i, int j)
 			}
 			pthread_mutex_unlock(&coder->mutex);
 		}
-		usleep(5000);
+		usleep(100);
 	}
 	end_state(params);
 	return (NULL);

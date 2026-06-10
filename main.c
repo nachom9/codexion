@@ -28,8 +28,6 @@ void	set_threads(t_params *params, t_coders *coders, t_dongles *dongles)
 	i = 0;
 	if (params->number_of_coders == 1)
 	{
-		free(coders->coders[0]);
-		free(dongles->dongles[0]);
 		free_all(params);
 		return ;
 	}
@@ -54,13 +52,17 @@ int	main(int argc, char *argv[])
 	t_coders	*coders;
 	t_dongles	*dongles;
 	int			i;
+	int			params_checker;
 
 	i = 0;
 	if (argc != 9)
 	{
-		printf("Invalid arguments\n");
+		write(2, "Invalid number of arguments\n", 29);
 		return (0);
 	}
+	params_checker = check_params(argv);
+	if (params_checker > 0)
+		return (print_error(params_checker));
 	params = parse_params(argv);
 	dongles = set_dongles(params->number_of_coders);
 	params->dongles = dongles;

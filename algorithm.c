@@ -28,8 +28,8 @@ int	ft_min(t_coder *coder)
 
 void	*ft_fifo(void *arg)
 {
-	t_coder	*coder;
-	int		state;
+	t_coder			*coder;
+	int				state;
 
 	state = 1;
 	coder = (t_coder *)arg;
@@ -38,7 +38,11 @@ void	*ft_fifo(void *arg)
 		pthread_mutex_lock(&coder->params->mutex);
 		state = coder->params->state;
 		pthread_mutex_unlock(&coder->params->mutex);
-		take_dongles(coder);
+		if (take_dongles(coder) == 1)
+			compile(coder);
+		if (check_state(coder->params) == 1)
+			usleep(coder->params->dongle_cooldown * 1000);
+		unlock_dongles(coder);
 		usleep(1000);
 	}
 	return (NULL);
@@ -46,8 +50,8 @@ void	*ft_fifo(void *arg)
 
 void	*ft_edf(void *arg)
 {
-	t_coder	*coder;
-	int		state;
+	t_coder			*coder;
+	int				state;
 
 	state = 1;
 	coder = (t_coder *)arg;
@@ -57,7 +61,13 @@ void	*ft_edf(void *arg)
 		state = coder->params->state;
 		pthread_mutex_unlock(&coder->params->mutex);
 		if (ft_min(coder))
-			take_dongles(coder);
+		{
+			if (take_dongles(coder) == 1)
+				compile(coder);
+			if (check_state(coder->params) == 1)
+				usleep(coder->params->dongle_cooldown * 1000);
+			unlock_dongles(coder);
+		}
 		usleep(1000);
 	}
 	return (NULL);
