@@ -66,12 +66,12 @@ void	set_threads(t_params *params, t_coders *coders)
 		return ;
 	}
 	pthread_create(&params->death_thread, NULL, set_death_algorithm, params);
-	while (i < params->number_of_coders)
+	while (i < params->number_of_coders && check_state(params) == 1)
 	{
 		if (scheduler == 1)
 			pthread_create(&coders->coders[i]->thread,
 				NULL, ft_fifo, coders->coders[i]);
-		if (scheduler == 2)
+		else if (scheduler == 2)
 			pthread_create(&coders->coders[i]->thread,
 				NULL, ft_edf, coders->coders[i]);
 		i++;

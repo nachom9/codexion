@@ -36,6 +36,7 @@ typedef struct s_dongle
 {
 	int				id;
 	pthread_mutex_t	mutex;
+	long			cooldown;
 }	t_dongle;
 
 typedef struct s_coders

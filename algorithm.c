@@ -12,6 +12,21 @@
 
 #include "codexion.h"
 
+static int	check_dongles(t_coder *coder)
+{
+	int		left;
+	int		right;
+	long	time;
+
+	right = coder->id - 1;
+	left = coder->id % coder->params->number_of_coders;
+	time = get_time();
+	if (time >= coder->params->dongles->dongles[left]->cooldown
+		&& time >= coder->params->dongles->dongles[right]->cooldown)
+		return (1);
+	return (0);
+}
+
 static int	ft_min(t_coder *coder)
 {
 	int		i;
@@ -42,6 +57,7 @@ void	*ft_fifo(void *arg)
 {
 	t_coder			*coder;
 	int				state;
+	int				compile_check;
 
 	state = 1;
 	coder = (t_coder *)arg;
@@ -50,11 +66,16 @@ void	*ft_fifo(void *arg)
 		pthread_mutex_lock(&coder->params->mutex);
 		state = coder->params->state;
 		pthread_mutex_unlock(&coder->params->mutex);
-		if (take_dongles(coder) == 1)
-			compile(coder);
-		if (check_state(coder->params) == 1)
-			usleep(coder->params->dongle_cooldown * 1000);
-		unlock_dongles(coder);
+		if (check_dongles(coder) == 1)
+		{
+			if (take_dongles(coder) == 1)
+				compile_check = compile(coder);
+		}
+		if (compile_check == 0)
+		{
+			unlock_dongles(coder);
+		}
+		
 		usleep(1000);
 	}
 	return (NULL);
@@ -74,11 +95,11 @@ void	*ft_edf(void *arg)
 		pthread_mutex_unlock(&coder->params->mutex);
 		if (ft_min(coder))
 		{
-			if (take_dongles(coder) == 1)
-				compile(coder);
-			if (check_state(coder->params) == 1)
-				usleep(coder->params->dongle_cooldown * 1000);
-			unlock_dongles(coder);
+			if (check_dongles(coder) == 1)
+			{
+				if (take_dongles(coder) == 1)
+					compile(coder);
+			}
 		}
 		usleep(1000);
 	}

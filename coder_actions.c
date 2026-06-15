@@ -14,11 +14,17 @@
 
 void	unlock_dongles(t_coder	*coder)
 {
-	int	left;
-	int	right;
+	int		left;
+	int		right;
+	long	time;
 
 	right = coder->id - 1;
 	left = coder->id % coder->params->number_of_coders;
+	time = get_time();
+	coder->params->dongles->dongles[left]->cooldown
+		= time + (coder->params->dongle_cooldown);
+	coder->params->dongles->dongles[right]->cooldown
+		= time + (coder->params->dongle_cooldown);
 	pthread_mutex_unlock(&coder->params->dongles->dongles[left]->mutex);
 	pthread_mutex_unlock(&coder->params->dongles->dongles[right]->mutex);
 }
@@ -49,7 +55,7 @@ int	compile(t_coder *coder)
 	pthread_mutex_unlock(&coder->params->print_mtx);
 	usleep(coder->params->time_to_refactor * 1000);
 	coder->compiles -= 1;
-	return (0);
+	return (1);
 }
 
 static int	take_dongles_even(t_coder *coder, int right, int left)
@@ -111,7 +117,7 @@ int	take_dongles(t_coder *coder)
 	check = 1;
 	right = coder->id - 1;
 	left = coder->id % coder->params->number_of_coders;
-	if (check_state(coder->params))
+	if (check_state(coder->params) == 1)
 	{
 		if (coder->id % 2 == 0)
 			check = take_dongles_even(coder, right, left);

@@ -20,6 +20,7 @@ static t_dongle	*create_dongle(int id)
 	if (!node)
 		return (NULL);
 	node->id = id;
+	node->cooldown = 0;
 	pthread_mutex_init(&node->mutex, NULL);
 	return (node);
 }
