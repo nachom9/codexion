@@ -33,7 +33,7 @@ int	compile(t_coder *coder)
 {
 	pthread_mutex_lock(&coder->params->print_mtx);
 	if (check_state(coder->params) == 0)
-		return (pthread_mutex_unlock(&coder->params->print_mtx), 0);
+		return (pthread_mutex_unlock(&coder->params->print_mtx), 2);
 	printf("%ld %d is compiling\n",
 		get_time() - coder->params->start_time, coder->id);
 	pthread_mutex_unlock(&coder->params->print_mtx);

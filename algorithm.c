@@ -80,7 +80,7 @@ void	*ft_fifo(void *arg)
 			if (take_dongles(coder) == 1)
 				compile_check = compile(coder);
 		}
-		if (compile_check == 0)
+		if (compile_check == 2)
 		{
 			unlock_dongles(coder);
 		}
@@ -110,7 +110,7 @@ void	*ft_edf(void *arg)
 				if (take_dongles(coder) == 1)
 					compile_check = compile(coder);
 			}
-			if (compile_check == 0)
+			if (compile_check == 2)
 				unlock_dongles(coder);
 		}
 		usleep(1000);

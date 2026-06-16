@@ -53,6 +53,11 @@ void	free_all(t_params *params)
 	{
 		pthread_join(params->coders->coders[i]->thread, NULL);
 		free(params->coders->coders[i]);
+		i++;
+	}
+	i = 0;
+	while (i < params->number_of_coders)
+	{
 		free(params->dongles->dongles[i]);
 		i++;
 	}
