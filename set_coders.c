@@ -62,8 +62,10 @@ void	set_threads(t_params *params, t_coders *coders)
 	i = 0;
 	if (params->number_of_coders == 1)
 	{
-		free_all(params);
-		return ;
+		usleep(params->time_to_burnout * 1000);
+		printf("%ld %d burned out\n",
+			get_time() - params->start_time, coders->coders[0]->id);
+		return (free_all(params));
 	}
 	pthread_create(&params->death_thread, NULL, set_death_algorithm, params);
 	while (i < params->number_of_coders && check_state(params) == 1)
