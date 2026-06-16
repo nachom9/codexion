@@ -18,8 +18,8 @@ static int	check_dongles(t_coder *coder)
 	int		right;
 	long	time;
 
-	right = coder->id - 1;
-	left = coder->id % coder->params->number_of_coders;
+	left = coder->id - 1;
+	right = coder->id % coder->params->number_of_coders;
 	pthread_mutex_lock(&coder->params->dongles->dongles[left]->mutex);
 	pthread_mutex_lock(&coder->params->dongles->dongles[right]->mutex);
 	time = get_time();
