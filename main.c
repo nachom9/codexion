@@ -17,10 +17,8 @@ int	main(int argc, char *argv[])
 	t_params	*params;
 	t_coders	*coders;
 	t_dongles	*dongles;
-	int			i;
 	int			params_checker;
 
-	i = 0;
 	if (argc != 9)
 	{
 		write(2, "Invalid number of arguments\n", 29);

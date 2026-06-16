@@ -54,6 +54,8 @@ t_params	*parse_params(char **args)
 	node->coders = NULL;
 	node->dongles = NULL;
 	pthread_mutex_init(&node->mutex, NULL);
+	pthread_mutex_init(&node->print_mtx, NULL);
+	pthread_mutex_init(&node->check_mtx, NULL);
 	return (node);
 }
 

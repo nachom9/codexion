@@ -20,10 +20,18 @@ static int	check_dongles(t_coder *coder)
 
 	right = coder->id - 1;
 	left = coder->id % coder->params->number_of_coders;
+	pthread_mutex_lock(&coder->params->dongles->dongles[left]->mutex);
+	pthread_mutex_lock(&coder->params->dongles->dongles[right]->mutex);
 	time = get_time();
 	if (time >= coder->params->dongles->dongles[left]->cooldown
 		&& time >= coder->params->dongles->dongles[right]->cooldown)
+	{
+		pthread_mutex_unlock(&coder->params->dongles->dongles[left]->mutex);
+		pthread_mutex_unlock(&coder->params->dongles->dongles[right]->mutex);
 		return (1);
+	}
+	pthread_mutex_unlock(&coder->params->dongles->dongles[left]->mutex);
+	pthread_mutex_unlock(&coder->params->dongles->dongles[right]->mutex);
 	return (0);
 }
 
@@ -60,6 +68,7 @@ void	*ft_fifo(void *arg)
 	int				compile_check;
 
 	state = 1;
+	compile_check = 1;
 	coder = (t_coder *)arg;
 	while (coder->compiles > 0 && state == 1)
 	{
@@ -75,7 +84,6 @@ void	*ft_fifo(void *arg)
 		{
 			unlock_dongles(coder);
 		}
-		
 		usleep(1000);
 	}
 	return (NULL);
@@ -85,9 +93,11 @@ void	*ft_edf(void *arg)
 {
 	t_coder			*coder;
 	int				state;
+	int				compile_check;
 
 	state = 1;
 	coder = (t_coder *)arg;
+	compile_check = 1;
 	while (coder->compiles > 0 && state == 1)
 	{
 		pthread_mutex_lock(&coder->params->mutex);
@@ -98,8 +108,10 @@ void	*ft_edf(void *arg)
 			if (check_dongles(coder) == 1)
 			{
 				if (take_dongles(coder) == 1)
-					compile(coder);
+					compile_check = compile(coder);
 			}
+			if (compile_check == 0)
+				unlock_dongles(coder);
 		}
 		usleep(1000);
 	}
